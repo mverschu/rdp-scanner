@@ -99,9 +99,19 @@ async def scan_range(ip_range, quiet):
 
 def generate_html_table(raw_results):
     html = "<table>\n"
-    html += "  <tr><th>IP</th><th>Status</th></tr>\n"
+    html += "  <thead>\n"
+    html += "    <tr>\n"
+    html += "      <th scope=\"col\">IP Address</th>\n"
+    html += "      <th scope=\"col\">NLA Status</th>\n"
+    html += "    </tr>\n"
+    html += "  </thead>\n"
+    html += "  <tbody>\n"
     for result in raw_results:
-        html += f"  <tr><td>{result[0]}</td><td>{result[2]}</td></tr>\n"
+        html += "    <tr>\n"
+        html += f"      <td>{result[0]}</td>\n"
+        html += f"      <td>{result[2]}</td>\n"
+        html += "    </tr>\n"
+    html += "  </tbody>\n"
     html += "</table>"
     return html
 
