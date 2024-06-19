@@ -73,7 +73,7 @@ async def scan_range(ip_range, quiet):
     open_hosts = await run_initial_scan(ip_range)
     if not open_hosts:
         print(colored("No hosts with port 3389 open found.", "red"))
-        return []
+        return [], []
 
     print(colored(f"Found {len(open_hosts)} hosts with port 3389 open:", "yellow"))
     for host in open_hosts:
