@@ -58,9 +58,9 @@ def check_nla(host, quiet=False):
         print(colored(f"Failed to connect to {host}: {e}", "red"))
 
     if nla_supported:
-        return host, colored("NLA Enabled", "green")
+        return host, colored("NLA Enabled", "green"), "NLA Enabled"
     else:
-        return host, colored("NLA Disabled", "red")
+        return host, colored("NLA Disabled", "red"), "NLA Disabled"
 
 async def run_initial_scan(ip_range):
     print(colored(f"Starting initial scan for range: {ip_range}", "yellow"))
@@ -82,35 +82,54 @@ async def scan_range(ip_range, quiet):
     print(colored("Starting detailed scan...", "yellow"))
 
     results = []
+    raw_results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_host = {executor.submit(check_nla, host, quiet): host for host in open_hosts}
         for future in as_completed(future_to_host):
             host = future_to_host[future]
             try:
                 result = future.result()
-                results.append(result)
+                results.append(result[:2])
+                raw_results.append(result)
             except Exception as exc:
                 print(colored(f"{host} generated an exception: {exc}", "red"))
 
     print(colored("Detailed scan complete.", "yellow"))
-    return results
+    return results, raw_results
+
+def generate_html_table(raw_results):
+    html = "<table>\n"
+    html += "  <tr><th>IP</th><th>Status</th></tr>\n"
+    for result in raw_results:
+        html += f"  <tr><td>{result[0]}</td><td>{result[2]}</td></tr>\n"
+    html += "</table>"
+    return html
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scan IP or range for NLA status on RDP port 3389.")
     parser.add_argument("--ip", help="Single IP address to scan")
     parser.add_argument("--range", help="CIDR range of IP addresses to scan")
     parser.add_argument("--quiet", action="store_true", help="Run the commands in the background without opening RDP windows")
+    parser.add_argument("--output", help="Specify output format: html")
     args = parser.parse_args()
 
     if args.ip:
         print(colored(f"Starting scan for IP: {args.ip}", "yellow"))
-        results = asyncio.run(scan_range(args.ip, args.quiet))
-        for ip, status in results:
-            print(f"{ip}: {status}")
+        results, raw_results = asyncio.run(scan_range(args.ip, args.quiet))
+        if args.output == "html":
+            html_output = generate_html_table(raw_results)
+            print(html_output)
+        else:
+            for ip, status in results:
+                print(f"{ip}: {status}")
         print(colored("Scanning complete.", "yellow"))
     elif args.range:
-        results = asyncio.run(scan_range(args.range, args.quiet))
-        for ip, status in results:
-            print(f"{ip}: {status}")
+        results, raw_results = asyncio.run(scan_range(args.range, args.quiet))
+        if args.output == "html":
+            html_output = generate_html_table(raw_results)
+            print(html_output)
+        else:
+            for ip, status in results:
+                print(f"{ip}: {status}")
     else:
         print(colored("Please provide --ip or --range argument.", "red"))
