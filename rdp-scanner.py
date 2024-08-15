@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import subprocess
 from termcolor import colored
@@ -13,7 +14,7 @@ def ensure_sudo():
         print(colored("This script requires elevated privileges. Re-running with sudo...", "red"))
         try:
             # Re-run the script with sudo
-            os.execvp("sudo", ["sudo"] + sys.argv)
+            os.execvp("sudo", ["sudo", "python3"] + sys.argv)
         except Exception as e:
             print(colored(f"Failed to re-run the script with sudo: {e}", "red"))
             sys.exit(1)
