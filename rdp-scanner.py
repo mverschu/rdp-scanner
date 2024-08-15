@@ -8,6 +8,16 @@ import os
 import time
 import psutil
 
+def ensure_sudo():
+    if os.geteuid() != 0:
+        print(colored("This script requires elevated privileges. Re-running with sudo...", "red"))
+        try:
+            # Re-run the script with sudo
+            os.execvp("sudo", ["sudo"] + sys.argv)
+        except Exception as e:
+            print(colored(f"Failed to re-run the script with sudo: {e}", "red"))
+            sys.exit(1)
+
 def run_nmap(command):
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout
@@ -116,6 +126,8 @@ def generate_html_table(raw_results):
     return html
 
 if __name__ == "__main__":
+    ensure_sudo()
+    
     parser = argparse.ArgumentParser(description="Scan IP or range for NLA status on RDP port 3389.")
     parser.add_argument("--ip", help="Single IP address to scan")
     parser.add_argument("--range", help="CIDR range of IP addresses to scan")
